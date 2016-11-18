@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+  echo "Usage: $(basename $0) [php_code | php_script]"
+  exit
+fi
+
+phps=$(docker images hamaco/php-all --format "{{.Tag}}" | grep -e '^[0-9]' | sort)
+
+for PHP in $phps; do
+  cmd="docker run hamaco/php-all:$PHP"
+
+  echo -n "php-$PHP: "
+
+  if [ -f "$1" ]; then
+    RESULT=`$cmd "$1"`
+  else
+    RESULT=`$cmd -r "$1;"`
+    if [ $? = 0 -a -z "$RESULT" ]; then
+      RESULT=`$cmd -r "var_dump($1);"`
+    fi
+  fi
+  echo $RESULT
+done
